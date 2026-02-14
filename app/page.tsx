@@ -19,7 +19,7 @@ const slogans = [
 const tracks = [
   '/Lo-Hype Type Beat 1.mp3',
   '/Lo-Hype Type Beat 2.mp3',
-  '/rob-e-the_panic95bpm',
+  '/rob-e-the_panic95bpm.mp3',
 ]
 
 // Fisher-Yates shuffle
