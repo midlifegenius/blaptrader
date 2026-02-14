@@ -16,7 +16,11 @@ const slogans = [
   'THE FUTURE TRADES IN BASS.',
 ]
 
-const tracks = ['/Lo-Hype Type Beat 1.mp3', '/Lo-Hype Type Beat 2.mp3']
+const tracks = [
+  '/Lo-Hype Type Beat 1.mp3',
+  '/Lo-Hype Type Beat 2.mp3',
+  'rob-e-the_panic95bpm',
+]
 
 export default function Home() {
   const [index, setIndex] = useState(0)
@@ -28,7 +32,7 @@ export default function Home() {
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % slogans.length)
-    }, 30000)
+    }, 16969)
 
     return () => clearInterval(interval)
   }, [])
