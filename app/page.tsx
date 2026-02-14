@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const slogans = [
@@ -16,19 +16,63 @@ const slogans = [
   'THE FUTURE TRADES IN BASS.',
 ]
 
+const tracks = ['/Lo-Hype Type Beat 1.mp3', '/Lo-Hype Type Beat 2.mp3']
+
 export default function Home() {
   const [index, setIndex] = useState(0)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
+  // Rotate slogans
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % slogans.length)
-    }, 30000) // 30 seconds
+    }, 30000)
 
     return () => clearInterval(interval)
   }, [])
 
+  // Setup audio
+  useEffect(() => {
+    if (!audioRef.current) return
+
+    const randomTrack = tracks[Math.floor(Math.random() * tracks.length)]
+
+    audioRef.current.src = randomTrack
+    audioRef.current.loop = true
+    audioRef.current.volume = 0
+  }, [])
+
+  const toggleAudio = async () => {
+    if (!audioRef.current) return
+
+    if (!isPlaying) {
+      await audioRef.current.play()
+
+      // Smooth fade in
+      let vol = 0
+      const fade = setInterval(() => {
+        if (!audioRef.current) return
+        if (vol >= 0.4) {
+          clearInterval(fade)
+        } else {
+          vol += 0.02
+          audioRef.current.volume = vol
+        }
+      }, 100)
+
+      setIsPlaying(true)
+    } else {
+      audioRef.current.pause()
+      setIsPlaying(false)
+    }
+  }
+
   return (
     <main className='flex min-h-screen flex-col items-center justify-center bg-neutral-950 text-neutral-100 overflow-hidden'>
+      {/* Audio element */}
+      <audio ref={audioRef} />
+
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
@@ -54,9 +98,16 @@ export default function Home() {
           </AnimatePresence>
         </div>
 
-        <div className='pt-8'>
+        <div className='pt-8 flex flex-col items-center gap-4'>
           <button className='border border-neutral-700 px-8 py-3 text-xs tracking-widest hover:bg-neutral-100 hover:text-black transition-all duration-500'>
             COMING SOONER THAN LATER
+          </button>
+
+          <button
+            onClick={toggleAudio}
+            className='text-xs tracking-widest text-neutral-500 hover:text-white transition'
+          >
+            {isPlaying ? 'SOUND OFF' : 'SOUND ON'}
           </button>
         </div>
       </motion.div>
