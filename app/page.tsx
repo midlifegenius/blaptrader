@@ -21,6 +21,7 @@ const tracks = ['/Lo-Hype Type Beat 1.mp3', '/Lo-Hype Type Beat 2.mp3']
 export default function Home() {
   const [index, setIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
+
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // Rotate slogans
@@ -32,15 +33,14 @@ export default function Home() {
     return () => clearInterval(interval)
   }, [])
 
-  // Setup audio
+  // ✅ Pick random track AFTER mount (pure render safe)
   useEffect(() => {
     if (!audioRef.current) return
 
-    const randomTrack = tracks[Math.floor(Math.random() * tracks.length)]
-
-    audioRef.current.src = randomTrack
+    const randomIndex = Math.floor(Math.random() * tracks.length)
+    audioRef.current.src = tracks[randomIndex]
     audioRef.current.loop = true
-    audioRef.current.volume = 0
+    audioRef.current.volume = 0.4
   }, [])
 
   const toggleAudio = async () => {
@@ -48,19 +48,6 @@ export default function Home() {
 
     if (!isPlaying) {
       await audioRef.current.play()
-
-      // Smooth fade in
-      let vol = 0
-      const fade = setInterval(() => {
-        if (!audioRef.current) return
-        if (vol >= 0.4) {
-          clearInterval(fade)
-        } else {
-          vol += 0.02
-          audioRef.current.volume = vol
-        }
-      }, 100)
-
       setIsPlaying(true)
     } else {
       audioRef.current.pause()
@@ -70,7 +57,6 @@ export default function Home() {
 
   return (
     <main className='flex min-h-screen flex-col items-center justify-center bg-neutral-950 text-neutral-100 overflow-hidden'>
-      {/* Audio element */}
       <audio ref={audioRef} />
 
       <motion.div
@@ -112,7 +98,6 @@ export default function Home() {
         </div>
       </motion.div>
 
-      {/* Subtle background grid */}
       <div className='absolute inset-0 -z-10 opacity-10 bg-[radial-gradient(circle_at_center,white_1px,transparent_1px)] bg-[size:40px_40px]' />
     </main>
   )
