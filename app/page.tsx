@@ -19,25 +19,72 @@ const slogans = [
 const tracks = [
   '/Lo-Hype Type Beat 1.mp3',
   '/Lo-Hype Type Beat 2.mp3',
-  'rob-e-the_panic95bpm',
+  '/rob-e-the_panic95bpm',
 ]
 
+// Fisher-Yates shuffle
+function shuffleArray(array: string[]) {
+  const shuffled = [...array]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  return shuffled
+}
+
 export default function Home() {
+  const [shuffledSlogans, setShuffledSlogans] = useState<string[]>([])
   const [index, setIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  // Rotate slogans
+  // Shuffle slogans once on mount
   useEffect(() => {
-    const interval = setInterval(() => {
-      setIndex((prev) => (prev + 1) % slogans.length)
-    }, 16969)
-
-    return () => clearInterval(interval)
+    const shuffled = shuffleArray(slogans)
+    setShuffledSlogans(shuffled)
   }, [])
 
-  // ✅ Pick random track AFTER mount (pure render safe)
+  // Rotate slogans
+  const shuffleTrackAndPlay = async () => {
+    if (!audioRef.current) return
+
+    const randomIndex = Math.floor(Math.random() * tracks.length)
+    const newTrack = tracks[randomIndex]
+
+    audioRef.current.src = newTrack
+    audioRef.current.loop = true
+    audioRef.current.volume = 0.4
+
+    try {
+      await audioRef.current.play()
+      setIsPlaying(true)
+    } catch (err) {
+      console.log('Autoplay blocked until user interaction')
+    }
+  }
+
+  useEffect(() => {
+    if (!shuffledSlogans.length) return
+
+    const interval = setInterval(() => {
+      setIndex((prev) => {
+        const next = prev + 1
+
+        // If we reached the end, reshuffle again
+        if (next >= shuffledSlogans.length) {
+          setShuffledSlogans(shuffleArray(slogans))
+          return 0
+        }
+
+        return next
+      })
+    }, 9696)
+
+    return () => clearInterval(interval)
+  }, [shuffledSlogans])
+
+  // Random track after mount
   useEffect(() => {
     if (!audioRef.current) return
 
@@ -75,29 +122,34 @@ export default function Home() {
 
         <div className='h-8 flex items-center justify-center'>
           <AnimatePresence mode='wait'>
-            <motion.p
-              key={index}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.8 }}
-              className='text-sm md:text-base tracking-[0.3em] text-neutral-400'
-            >
-              {slogans[index]}
-            </motion.p>
+            {shuffledSlogans.length > 0 && (
+              <motion.p
+                key={index}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.8 }}
+                className='text-sm md:text-base tracking-[0.3em] text-neutral-400'
+              >
+                {shuffledSlogans[index]}
+              </motion.p>
+            )}
           </AnimatePresence>
         </div>
 
         <div className='pt-8 flex flex-col items-center gap-4'>
-          <button className='border border-neutral-700 px-8 py-3 text-xs tracking-widest hover:bg-neutral-100 hover:text-black transition-all duration-500'>
-            COMING SOONER THAN LATER
-          </button>
-
           <button
             onClick={toggleAudio}
             className='text-xs tracking-widest text-neutral-500 hover:text-white transition'
           >
-            {isPlaying ? 'SOUND OFF' : 'SOUND ON'}
+            {isPlaying ? 'BLAPS ON' : 'BLAPS OFF'}
+          </button>
+
+          <button
+            onClick={shuffleTrackAndPlay}
+            className='border border-neutral-700 px-8 py-3 text-xs tracking-widest hover:bg-neutral-100 hover:text-black transition-all duration-500'
+          >
+            COMING SOONER THAN LATER
           </button>
         </div>
       </motion.div>
