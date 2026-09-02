@@ -102,7 +102,7 @@ export default function Home() {
   }, [])
 
   return (
-    <main className='max-w-md mx-auto pt-20 px-4 flex flex-col items-center gap-8'>
+    <main className='max-w-md mx-auto  px-4 flex flex-col items-center gap-8'>
       {/* HEADER */}
 
       <div className='text-center'>
@@ -323,6 +323,12 @@ export default function Home() {
       {/* MUSIC + NAVIGATION */}
 
       <div className='w-full max-w-[300px] flex flex-col gap-3'>
+        <button
+          onClick={() => setIsFlipped(!isFlipped)}
+          className='w-full px-4 py-3 rounded bg-slate-800 border border-slate-600 text-xs font-bold hover:bg-slate-700 transition-colors tracking-widest text-white'
+        >
+          {isFlipped ? 'SHOW ARTWORK' : 'FLIP CARD'}
+        </button>
         {/* AUDIO CONTROLS */}
 
         <div className='flex items-center gap-2'>
@@ -350,13 +356,6 @@ export default function Home() {
         </div>
 
         {/* FLIP */}
-
-        <button
-          onClick={() => setIsFlipped(!isFlipped)}
-          className='w-full px-4 py-3 rounded bg-slate-800 border border-slate-600 text-xs font-bold hover:bg-slate-700 transition-colors tracking-widest text-white'
-        >
-          {isFlipped ? 'SHOW ARTWORK' : 'FLIP CARD'}
-        </button>
       </div>
     </main>
   )
