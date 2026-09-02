@@ -179,7 +179,7 @@ export default function Home() {
               <img
                 src={card.image}
                 alt=''
-                className='absolute inset-0 w-full h-full object-cover opacity-[1] blur-[2px] scale-110'
+                className='absolute inset-0 w-full h-full object-cover opacity-[.8]  scale-200'
               />
 
               {/* DARK OVERLAY */}
