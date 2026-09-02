@@ -17,29 +17,26 @@ export default function Home() {
     if (audioRef.current) {
       audioRef.current.pause()
       audioRef.current.currentTime = 0
-      audioRef.current.src = ''
     }
 
     setIsPlaying(false)
   }
 
-  // Play the current card
-  const playPreview = (mp3: string) => {
-    // Kill previous audio completely
-    if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.currentTime = 0
+  const playPreview = () => {
+    if (!card.mp3) return
+
+    // If this card's audio isn't loaded yet, create it
+    if (!audioRef.current) {
+      const audio = new Audio(card.mp3)
+
+      audioRef.current = audio
+
+      audio.addEventListener('ended', () => {
+        setIsPlaying(false)
+      })
     }
 
-    const audio = new Audio(mp3)
-
-    audioRef.current = audio
-
-    audio.addEventListener('ended', () => {
-      setIsPlaying(false)
-    })
-
-    audio
+    audioRef.current
       .play()
       .then(() => {
         setIsPlaying(true)
@@ -50,63 +47,48 @@ export default function Home() {
       })
   }
 
-  // Preview / Stop button
-  const handlePreview = () => {
-    if (!card.mp3) return
-
-    if (isPlaying) {
-      stopPreview()
-      return
+  const pausePreview = () => {
+    if (audioRef.current) {
+      audioRef.current.pause()
     }
 
-    playPreview(card.mp3)
+    setIsPlaying(false)
+  }
+
+  const handlePlayPause = () => {
+    if (isPlaying) {
+      pausePreview()
+    } else {
+      playPreview()
+    }
   }
 
   // NEXT
   const handleNext = () => {
-    // Stop old card
-    if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.currentTime = 0
-    }
-
-    setIsFlipped(false)
+    // Navigation NEVER starts audio
+    stopPreview()
 
     const nextIndex = (currentIndex + 1) % cardsData.length
+
     setCurrentIndex(nextIndex)
+    setIsFlipped(false)
 
-    // Automatically play the new card
-    const nextCard = cardsData[nextIndex]
-
-    if (nextCard.mp3) {
-      playPreview(nextCard.mp3)
-    } else {
-      setIsPlaying(false)
-    }
+    // Make sure next card starts with a fresh audio player
+    audioRef.current = null
   }
 
   // PREVIOUS
   const handlePrev = () => {
-    // Stop old card
-    if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.currentTime = 0
-    }
-
-    setIsFlipped(false)
+    // Navigation NEVER starts audio
+    stopPreview()
 
     const prevIndex = (currentIndex - 1 + cardsData.length) % cardsData.length
 
     setCurrentIndex(prevIndex)
+    setIsFlipped(false)
 
-    // Automatically play the new card
-    const prevCard = cardsData[prevIndex]
-
-    if (prevCard.mp3) {
-      playPreview(prevCard.mp3)
-    } else {
-      setIsPlaying(false)
-    }
+    // Make sure previous card starts with a fresh audio player
+    audioRef.current = null
   }
 
   // Cleanup audio if component is removed
@@ -136,6 +118,7 @@ export default function Home() {
       {/* CARD */}
 
       <div className='relative w-[300px] h-[420px] [perspective:1000px]'>
+        {/* ROTATING CARD */}
         <div
           className={`relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] ${
             isFlipped ? '[transform:rotateY(180deg)]' : ''
@@ -144,30 +127,12 @@ export default function Home() {
           {/* ================= FRONT ================= */}
 
           <div className='absolute inset-0 w-full h-full [backface-visibility:hidden]'>
-            <div className='w-full h-full rounded-xl overflow-hidden border border-purple-500/40 bg-[#0a0f1c] shadow-[0_0_30px_-5px_rgba(168,85,247,0.3)] flex flex-col'>
-              {/* ARTWORK AREA */}
-              <div className='h-[355px] shrink-0 p-3 flex items-center justify-center bg-[#0a0f1c]'>
-                <img
-                  src={card.image}
-                  alt={card.title}
-                  className='max-w-full max-h-full object-contain rounded-lg'
-                />
-              </div>
-
-              {/* PREVIEW BUTTON */}
-              <div className='px-3 pb-3 pt-1'>
-                <button
-                  onClick={handlePreview}
-                  disabled={!card.mp3}
-                  className={`w-full rounded border py-3 text-xs font-bold tracking-widest transition-colors ${
-                    isPlaying
-                      ? 'border-cyan-400 text-cyan-400 hover:bg-cyan-400/10'
-                      : 'border-slate-600 text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  {isPlaying ? 'STOP' : 'PREVIEW'}
-                </button>
-              </div>
+            <div className='w-full h-full rounded-xl overflow-hidden border border-purple-500/40 bg-[#0a0f1c] shadow-[0_0_30px_-5px_rgba(168,85,247,0.3)] flex items-center justify-center p-3'>
+              <img
+                src={card.image}
+                alt={card.title}
+                className='max-w-full max-h-full object-contain rounded-lg'
+              />
             </div>
           </div>
 
@@ -176,16 +141,19 @@ export default function Home() {
           <div className='absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)]'>
             <div className='relative w-full h-full rounded-xl overflow-hidden border border-fuchsia-500/30 bg-[#080b14] shadow-xl'>
               {/* BACKGROUND ARTWORK */}
+
               <img
                 src={card.image}
                 alt=''
-                className='absolute inset-0 w-full h-full object-cover opacity-[.8]  scale-200'
+                className='absolute inset-0 w-full h-full object-cover opacity-[.8] scale-200'
               />
 
               {/* DARK OVERLAY */}
+
               <div className='absolute inset-0 bg-[#080b14]/80' />
 
               {/* CONTENT */}
+
               <div className='relative z-10 w-full h-full px-5 py-4 flex flex-col'>
                 {/* TOP IDENTIFICATION */}
 
@@ -226,6 +194,7 @@ export default function Home() {
                     <p className='text-[8px] text-slate-500 tracking-widest'>
                       BPM
                     </p>
+
                     <p className='text-sm font-bold text-white mt-1'>
                       {card.bpm}
                     </p>
@@ -235,6 +204,7 @@ export default function Home() {
                     <p className='text-[8px] text-slate-500 tracking-widest'>
                       KEY
                     </p>
+
                     <p className='text-sm font-bold text-white mt-1'>
                       {card.key}
                     </p>
@@ -244,6 +214,7 @@ export default function Home() {
                     <p className='text-[8px] text-slate-500 tracking-widest'>
                       LENGTH
                     </p>
+
                     <p className='text-sm font-bold text-white mt-1'>
                       {card.duration}
                     </p>
@@ -253,8 +224,6 @@ export default function Home() {
                 {/* STATS */}
 
                 <div className='pt-4 flex flex-col gap-3'>
-                  <p className='text-[9px] text-slate-500 tracking-widest mb-1'></p>
-
                   {/* ENERGY */}
 
                   <div>
@@ -351,28 +320,42 @@ export default function Home() {
         </div>
       </div>
 
-      {/* NAVIGATION */}
+      {/* MUSIC + NAVIGATION */}
 
-      <div className='flex items-center gap-4 w-full max-w-[300px]'>
-        <button
-          onClick={handlePrev}
-          className='px-4 py-3 rounded border border-slate-700 text-xs font-bold hover:bg-slate-800 transition-colors text-slate-400'
-        >
-          PREV
-        </button>
+      <div className='w-full max-w-[300px] flex flex-col gap-3'>
+        {/* AUDIO CONTROLS */}
+
+        <div className='flex items-center gap-2'>
+          <button
+            onClick={handlePlayPause}
+            disabled={!card.mp3}
+            className='flex-1 px-4 py-3 rounded border border-cyan-500/40 bg-[#0a0f1c] text-cyan-400 text-xs font-bold tracking-widest hover:bg-cyan-400/10 transition-colors disabled:opacity-40'
+          >
+            {isPlaying ? 'PAUSE' : 'PLAY'}
+          </button>
+
+          <button
+            onClick={handlePrev}
+            className='px-4 py-3 rounded border border-slate-700 bg-[#0a0f1c] text-slate-400 text-xs font-bold hover:bg-slate-800 transition-colors'
+          >
+            PREV
+          </button>
+
+          <button
+            onClick={handleNext}
+            className='px-4 py-3 rounded border border-slate-700 bg-[#0a0f1c] text-slate-400 text-xs font-bold hover:bg-slate-800 transition-colors'
+          >
+            NEXT
+          </button>
+        </div>
+
+        {/* FLIP */}
 
         <button
           onClick={() => setIsFlipped(!isFlipped)}
-          className='flex-1 px-4 py-3 rounded bg-slate-800 border border-slate-600 text-xs font-bold hover:bg-slate-700 transition-colors tracking-widest text-white'
+          className='w-full px-4 py-3 rounded bg-slate-800 border border-slate-600 text-xs font-bold hover:bg-slate-700 transition-colors tracking-widest text-white'
         >
           {isFlipped ? 'SHOW ARTWORK' : 'FLIP CARD'}
-        </button>
-
-        <button
-          onClick={handleNext}
-          className='px-4 py-3 rounded border border-slate-700 text-xs font-bold hover:bg-slate-800 transition-colors text-slate-400'
-        >
-          NEXT
         </button>
       </div>
     </main>
