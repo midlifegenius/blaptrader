@@ -1,0 +1,42 @@
+[
+  {
+    "id": "006",
+    "editionTotal": 25,
+    "title": "SPACE WALK",
+    "producer": "ROB E",
+    "image": "/spacewalk.PNG",
+    "mp3": "/spacewalk.mp3",
+    "rarity": "EPIC",
+    "rarityColor": "fuchsia-400",
+    "bpm": 92,
+    "key": "D MINOR",
+    "duration": "3:12",
+    "stats": {
+      "energy": 87,
+      "hardness": 72,
+      "vibe": "DARK",
+      "style": "TRAP",
+      "era": "2026"
+    }
+  },
+  {
+    "id": "007",
+    "editionTotal": 50,
+    "title": "NEON NIGHTS",
+    "producer": "ROB E",
+    "image": "/neon.PNG",
+    "mp3": "/neon.mp3",
+    "rarity": "RARE",
+    "rarityColor": "blue-400",
+    "bpm": 140,
+    "key": "C# MINOR",
+    "duration": "2:45",
+    "stats": {
+      "energy": 95,
+      "hardness": 88,
+      "vibe": "HYPE",
+      "style": "DRILL",
+      "era": "2026"
+    }
+  }
+]
