@@ -8,7 +8,7 @@ export default function Home() {
   const [isFlipped, setIsFlipped] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
 
-  const audioRef = useRef(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   const card = cardsData[currentIndex]
 
