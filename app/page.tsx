@@ -12,64 +12,101 @@ export default function Home() {
 
   const card = cardsData[currentIndex]
 
-  // Stop audio whenever the card changes
+  // Completely stop whatever is currently playing
   const stopPreview = () => {
     if (audioRef.current) {
       audioRef.current.pause()
       audioRef.current.currentTime = 0
+      audioRef.current.src = ''
     }
 
     setIsPlaying(false)
   }
 
-  // Preview / Stop button
-  const handlePreview = () => {
-    if (!card.mp3) return
-
-    // If currently playing, stop it
-    if (isPlaying) {
-      stopPreview()
-      return
+  // Play the current card
+  const playPreview = (mp3: string) => {
+    // Kill previous audio completely
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
     }
 
-    // Create audio for current card
-    if (!audioRef.current) {
-      audioRef.current = new Audio(card.mp3)
+    const audio = new Audio(mp3)
 
-      audioRef.current.addEventListener('ended', () => {
-        setIsPlaying(false)
-      })
-    } else {
-      // Make sure audio is using the current card
-      audioRef.current.src = card.mp3
-    }
+    audioRef.current = audio
 
-    audioRef.current.currentTime = 0
+    audio.addEventListener('ended', () => {
+      setIsPlaying(false)
+    })
 
-    audioRef.current
+    audio
       .play()
       .then(() => {
         setIsPlaying(true)
       })
       .catch((error) => {
         console.error('Could not play preview:', error)
+        setIsPlaying(false)
       })
+  }
+
+  // Preview / Stop button
+  const handlePreview = () => {
+    if (!card.mp3) return
+
+    if (isPlaying) {
+      stopPreview()
+      return
+    }
+
+    playPreview(card.mp3)
   }
 
   // NEXT
   const handleNext = () => {
-    stopPreview()
+    // Stop old card
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+    }
+
     setIsFlipped(false)
 
-    setCurrentIndex((prev) => (prev + 1) % cardsData.length)
+    const nextIndex = (currentIndex + 1) % cardsData.length
+    setCurrentIndex(nextIndex)
+
+    // Automatically play the new card
+    const nextCard = cardsData[nextIndex]
+
+    if (nextCard.mp3) {
+      playPreview(nextCard.mp3)
+    } else {
+      setIsPlaying(false)
+    }
   }
 
   // PREVIOUS
   const handlePrev = () => {
-    stopPreview()
+    // Stop old card
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+    }
+
     setIsFlipped(false)
 
-    setCurrentIndex((prev) => (prev - 1 + cardsData.length) % cardsData.length)
+    const prevIndex = (currentIndex - 1 + cardsData.length) % cardsData.length
+
+    setCurrentIndex(prevIndex)
+
+    // Automatically play the new card
+    const prevCard = cardsData[prevIndex]
+
+    if (prevCard.mp3) {
+      playPreview(prevCard.mp3)
+    } else {
+      setIsPlaying(false)
+    }
   }
 
   // Cleanup audio if component is removed
@@ -85,6 +122,7 @@ export default function Home() {
   return (
     <main className='max-w-md mx-auto pt-20 px-4 flex flex-col items-center gap-8'>
       {/* HEADER */}
+
       <div className='text-center'>
         <h2 className='text-cyan-400 text-sm tracking-widest font-bold'>
           {'// BLAP_TRADER PACK'}
@@ -96,6 +134,7 @@ export default function Home() {
       </div>
 
       {/* CARD */}
+
       <div className='relative w-[300px] h-[420px] [perspective:1000px]'>
         <div
           className={`relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] ${
@@ -105,111 +144,205 @@ export default function Home() {
           {/* ================= FRONT ================= */}
 
           <div className='absolute inset-0 w-full h-full [backface-visibility:hidden]'>
-            <div className='w-full h-full rounded-xl overflow-hidden border border-purple-500/40 bg-[#0a0f1c] shadow-[0_0_30px_-5px_rgba(168,85,247,0.3)]'>
-              <img
-                src={card.image}
-                alt={card.title}
-                className='w-full h-full object-cover'
-              />
+            <div className='w-full h-full rounded-xl overflow-hidden border border-purple-500/40 bg-[#0a0f1c] shadow-[0_0_30px_-5px_rgba(168,85,247,0.3)] flex flex-col'>
+              {/* ARTWORK AREA */}
+              <div className='h-[355px] shrink-0 p-3 flex items-center justify-center bg-[#0a0f1c]'>
+                <img
+                  src={card.image}
+                  alt={card.title}
+                  className='max-w-full max-h-full object-contain rounded-lg'
+                />
+              </div>
+
+              {/* PREVIEW BUTTON */}
+              <div className='px-3 pb-3 pt-1'>
+                <button
+                  onClick={handlePreview}
+                  disabled={!card.mp3}
+                  className={`w-full rounded border py-3 text-xs font-bold tracking-widest transition-colors ${
+                    isPlaying
+                      ? 'border-cyan-400 text-cyan-400 hover:bg-cyan-400/10'
+                      : 'border-slate-600 text-slate-300 hover:bg-slate-800'
+                  }`}
+                >
+                  {isPlaying ? 'STOP' : 'PREVIEW'}
+                </button>
+              </div>
             </div>
           </div>
 
           {/* ================= BACK ================= */}
 
           <div className='absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)]'>
-            <div className='w-full h-full rounded-xl border border-slate-800 bg-[#0a0f1c] px-6 py-5 shadow-xl flex flex-col'>
-              {/* TITLE */}
+            <div className='relative w-full h-full rounded-xl overflow-hidden border border-fuchsia-500/30 bg-[#080b14] shadow-xl'>
+              {/* BACKGROUND ARTWORK */}
+              <img
+                src={card.image}
+                alt=''
+                className='absolute inset-0 w-full h-full object-cover opacity-[1] blur-[2px] scale-110'
+              />
 
-              <h2 className='text-slate-500 text-xs tracking-widest mb-5'>
-                {'// BEAT INFO & STATS'}
-              </h2>
+              {/* DARK OVERLAY */}
+              <div className='absolute inset-0 bg-[#080b14]/80' />
 
-              {/* BASIC INFO */}
+              {/* CONTENT */}
+              <div className='relative z-10 w-full h-full px-5 py-4 flex flex-col'>
+                {/* TOP IDENTIFICATION */}
 
-              <div className='flex flex-col gap-2 border-b border-slate-800 pb-5 mb-5 text-sm'>
-                <p>{card.bpm} BPM</p>
-                <p>{card.key}</p>
-                <p>{card.duration}</p>
-              </div>
+                <div className='flex items-start justify-between border-b border-slate-800 pb-3'>
+                  <div>
+                    <p className='text-[9px] text-slate-500 tracking-widest'>
+                      BLAP_TRADER
+                    </p>
 
-              {/* STATS */}
+                    <h2 className='text-xl font-bold tracking-wider text-white mt-1'>
+                      {card.title}
+                    </h2>
 
-              <div className='flex flex-col gap-3 text-xs tracking-wider'>
-                {/* ENERGY */}
-
-                <div className='flex justify-between items-center'>
-                  <span className='text-slate-500'>ENERGY</span>
-
-                  <span>{card.stats.energy}</span>
-                </div>
-
-                {/* HARDNESS */}
-
-                <div className='flex justify-between items-center gap-3'>
-                  <span className='text-slate-500'>HARDNESS</span>
-
-                  <div className='flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden'>
-                    <div
-                      className='h-full bg-lime-400'
-                      style={{
-                        width: `${card.stats.hardness}%`,
-                      }}
-                    />
+                    <p className='text-[10px] text-slate-400 tracking-widest mt-1'>
+                      {card.producer}
+                    </p>
                   </div>
 
-                  <span>{card.stats.hardness}</span>
+                  <div className='text-right'>
+                    <p className='text-[9px] text-slate-500'>EDITION</p>
+
+                    <p className='text-sm font-bold text-slate-200'>
+                      {card.id}/{card.editionTotal}
+                    </p>
+
+                    <p
+                      className={`text-[10px] font-bold uppercase tracking-widest text-${card.rarityColor} mt-1`}
+                    >
+                      {card.rarity}
+                    </p>
+                  </div>
                 </div>
 
-                {/* VIBE */}
+                {/* BEAT INFO */}
 
-                <div className='flex justify-between items-center'>
-                  <span className='text-slate-500'>VIBE</span>
+                <div className='grid grid-cols-3 gap-2 py-4 border-b border-slate-800'>
+                  <div className='text-center'>
+                    <p className='text-[8px] text-slate-500 tracking-widest'>
+                      BPM
+                    </p>
+                    <p className='text-sm font-bold text-white mt-1'>
+                      {card.bpm}
+                    </p>
+                  </div>
 
-                  <span>{card.stats.vibe}</span>
+                  <div className='text-center border-x border-slate-800'>
+                    <p className='text-[8px] text-slate-500 tracking-widest'>
+                      KEY
+                    </p>
+                    <p className='text-sm font-bold text-white mt-1'>
+                      {card.key}
+                    </p>
+                  </div>
+
+                  <div className='text-center'>
+                    <p className='text-[8px] text-slate-500 tracking-widest'>
+                      LENGTH
+                    </p>
+                    <p className='text-sm font-bold text-white mt-1'>
+                      {card.duration}
+                    </p>
+                  </div>
                 </div>
 
-                {/* STYLE */}
+                {/* STATS */}
 
-                <div className='flex justify-between items-center'>
-                  <span className='text-slate-500'>STYLE</span>
+                <div className='pt-4 flex flex-col gap-3'>
+                  <p className='text-[9px] text-slate-500 tracking-widest mb-1'></p>
 
-                  <span>{card.stats.style}</span>
+                  {/* ENERGY */}
+
+                  <div>
+                    <div className='flex justify-between items-center mb-1'>
+                      <span className='text-[9px] text-slate-400 tracking-widest'>
+                        ENERGY
+                      </span>
+
+                      <span className='text-[10px] text-white font-bold'>
+                        {card.stats.energy}
+                      </span>
+                    </div>
+
+                    <div className='w-full h-1.5 bg-slate-800 rounded-full overflow-hidden'>
+                      <div
+                        className='h-full bg-lime-400 rounded-full'
+                        style={{
+                          width: `${card.stats.energy}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* HARDNESS */}
+
+                  <div>
+                    <div className='flex justify-between items-center mb-1'>
+                      <span className='text-[9px] text-slate-400 tracking-widest'>
+                        HARDNESS
+                      </span>
+
+                      <span className='text-[10px] text-white font-bold'>
+                        {card.stats.hardness}
+                      </span>
+                    </div>
+
+                    <div className='w-full h-1.5 bg-slate-800 rounded-full overflow-hidden'>
+                      <div
+                        className='h-full bg-lime-400 rounded-full'
+                        style={{
+                          width: `${card.stats.hardness}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* VIBE */}
+
+                  <div className='flex justify-between items-center'>
+                    <span className='text-[9px] text-slate-400 tracking-widest'>
+                      VIBE
+                    </span>
+
+                    <span className='text-[10px] font-bold text-white tracking-widest'>
+                      {card.stats.vibe}
+                    </span>
+                  </div>
+
+                  {/* STYLE */}
+
+                  <div className='flex justify-between items-center'>
+                    <span className='text-[9px] text-slate-400 tracking-widest'>
+                      STYLE
+                    </span>
+
+                    <span className='text-[10px] font-bold text-white tracking-widest'>
+                      {card.stats.style}
+                    </span>
+                  </div>
+
+                  {/* ERA */}
+
+                  <div className='flex justify-between items-center'>
+                    <span className='text-[9px] text-slate-400 tracking-widest'>
+                      ERA
+                    </span>
+
+                    <span className='text-[10px] font-bold text-white tracking-widest'>
+                      {card.stats.era}
+                    </span>
+                  </div>
                 </div>
 
-                {/* ERA */}
+                {/* REDEEM */}
 
-                <div className='flex justify-between items-center'>
-                  <span className='text-slate-500'>ERA</span>
-
-                  <span>{card.stats.era}</span>
-                </div>
-              </div>
-
-              {/* ACTION AREA */}
-
-              <div className='mt-auto pt-5 border-t border-slate-800'>
-                <p className='text-[10px] text-slate-400 text-center mb-3 tracking-widest'>
-                  LICENSE AVAILABLE
-                </p>
-
-                <div className='flex gap-3'>
-                  {/* PREVIEW / STOP */}
-
-                  <button
-                    onClick={handlePreview}
-                    className={`flex-1 rounded border py-2.5 text-xs transition-colors ${
-                      isPlaying
-                        ? 'border-cyan-400 text-cyan-400 hover:bg-cyan-400/10'
-                        : 'border-slate-600 hover:bg-slate-800'
-                    }`}
-                  >
-                    {isPlaying ? 'STOP' : 'PREVIEW'}
-                  </button>
-
-                  {/* REDEEM */}
-
-                  <button className='flex-1 rounded bg-lime-400 text-black py-2.5 text-xs font-bold hover:bg-lime-300 transition-colors shadow-[0_0_15px_-3px_rgba(163,230,53,0.4)]'>
-                    REDEEM
+                <div className='mt-auto pt-3 border-t border-slate-800'>
+                  <button className='w-full rounded bg-lime-400 text-black py-3 text-xs font-bold tracking-widest hover:bg-lime-300 transition-colors shadow-[0_0_15px_-3px_rgba(163,230,53,0.4)]'>
+                    REDEEM BEAT
                   </button>
                 </div>
               </div>
